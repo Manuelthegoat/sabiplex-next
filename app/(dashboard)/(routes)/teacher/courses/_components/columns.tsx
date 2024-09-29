@@ -43,7 +43,8 @@ export const columns: ColumnDef<Course>[] = [
         const price = parseFloat(row.getValue("price") || "0")
         const formatted = new Intl.NumberFormat("en-us", {
             style: "currency",
-            currency: "NGN"
+            currency: "NGN",
+            currencyDisplay: "narrowSymbol"
         }).format(price)
 
         return <div>{formatted}</div>
