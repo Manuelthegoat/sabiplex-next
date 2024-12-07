@@ -22,7 +22,8 @@ import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Course } from "@prisma/client";
-import { ComboBox } from "@/components/ui/combobox";
+import { ComboBox } from '@/components/ui/combobox';
+
 
 interface CategoryFormProps {
   initialData: Course;
@@ -105,10 +106,7 @@ export const CategoryForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <ComboBox
-                     options={...options}
-                      {...field} 
-                    />
+                    <ComboBox options={options} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
