@@ -131,7 +131,7 @@ export async function PATCH(
       const asset = await mux.video.assets.create({
         input: values.videoUrl,
         playback_policy: ["public"],
-        test: false,
+        test: false, //toggle this when you have strong internet
       });
 
       await db.muxData.create({

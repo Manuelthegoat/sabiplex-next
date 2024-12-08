@@ -1,16 +1,18 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { isTeacher } from "@/lib/teacher";
 import { SearchInput } from "./search-input";
 import { useState, useTransition, useEffect } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
 export const NavbarRoutes = () => {
+  const {userId} = useAuth()
   const pathname = usePathname();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,7 @@ export const NavbarRoutes = () => {
               Exit
             </Button>
           </Link>
-        ) : (
+        ) : isTeacher(userId) ? (
           <Link href="/teacher/courses">
             <Button
               size="sm"
@@ -65,7 +67,7 @@ export const NavbarRoutes = () => {
               Teacher Mode
             </Button>
           </Link>
-        )}
+        ) : null}
         <UserButton afterSignOutUrl="/" />
       </div>
     </>
