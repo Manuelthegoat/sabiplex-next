@@ -61,6 +61,7 @@ export const VideoPlayer = ({
       {!isReady && !isLocked && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
           <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+          <p className="text-sm text-secondary">Loading... please wait.</p>
         </div>
       )}
       {isLocked && (

@@ -1,48 +1,48 @@
-import Stripe from 'stripe';
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-
-import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
+import { headers } from 'next/headers';
 
 export async function POST(req: Request) {
-  const body = await req.text();
-  const signature = headers().get('Stripe-Signature') as string;
+  const body = await req.json();
+  const signature = headers().get('x-paystack-signature');
 
-  let event: Stripe.Event;
+  // Validate Paystack signature
+  const crypto = await import('crypto');
+  const hash = crypto
+    .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!)
+    .update(JSON.stringify(body))
+    .digest('hex');
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (error: any) {
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  if (hash !== signature) {
+    return new NextResponse('Invalid Signature', { status: 400 });
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
-  const userId = session?.metadata?.userId;
-  const courseId = session?.metadata?.courseId;
+  const { event, data } = body;
 
-  if (event.type === 'checkout.session.completed') {
+  if (event === 'charge.success') {
+    const userId = data.metadata.userId;
+    const courseId = data.metadata.courseId;
+
     if (!userId || !courseId) {
-      return new NextResponse(`Webhook Error: Missing metadata`, {
-        status: 400,
-      });
+      return new NextResponse('Missing metadata', { status: 400 });
     }
 
-    await db.purchase.create({
-      data: {
-        courseId: courseId,
-        userId: userId,
+    const existingPurchase = await db.purchase.findUnique({
+      where: {
+        userId_courseId: { userId, courseId },
       },
     });
+
+    if (!existingPurchase) {
+      await db.purchase.create({
+        data: {
+          courseId,
+          userId,
+        },
+      });
+    }
   } else {
-    return new NextResponse(
-      `Webhook Error: Unhandled event type ${event.type}`,
-      { status: 200 }
-    );
+    return new NextResponse(`Unhandled event type: ${event}`, { status: 200 });
   }
 
   return new NextResponse(null, { status: 200 });

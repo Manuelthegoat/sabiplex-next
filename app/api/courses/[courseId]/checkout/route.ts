@@ -1,9 +1,7 @@
-import Stripe from 'stripe';
 import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-
 import { db } from '@/lib/db';
-import { stripe } from '@/lib/stripe';
+import axios from 'axios';
 
 export async function POST(
   req: Request,
@@ -40,55 +38,34 @@ export async function POST(
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'USD',
-          product_data: {
-            name: course.title,
-            description: course.description!,
-          },
-          unit_amount: Math.round(course.price! * 100),
-        },
-      },
-    ];
-
-    let stripeCustomer = await db.stripeCustomer.findUnique({
-      where: {
+    const paystackPayload = {
+      email: user.emailAddresses[0].emailAddress,
+      amount: Math.round(course.price! * 100), // Amount in kobo (smallest Paystack unit)
+      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}?success=1`,
+      metadata: {
         userId: user.id,
+        courseId: course.id,
       },
-      select: {
-        stripeCustomerId: true,
-      },
-    });
+    };
 
-    if (!stripeCustomer) {
-      const customer = await stripe.customers.create({
-        email: user.emailAddresses[0].emailAddress,
-      });
-
-      stripeCustomer = await db.stripeCustomer.create({
-        data: {
-          userId: user.id,
-          stripeCustomerId: customer.id,
+    const paystackResponse = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      paystackPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
         },
-      });
+      }
+    );
+
+    if (paystackResponse.status !== 200) {
+      return new NextResponse('Failed to initialize payment', { status: 500 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomer.stripeCustomerId,
-      line_items,
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}?success=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}?canceled=1`,
-      metadata: {
-        courseId: course.id,
-        userId: user.id,
-      },
-    });
+    const { authorization_url } = paystackResponse.data.data;
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: authorization_url });
   } catch (error) {
     console.log('[COURSE_ID_CHECKOUT]', error);
     return new NextResponse('Internal Error', { status: 500 });
