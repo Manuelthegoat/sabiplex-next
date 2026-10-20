@@ -13,12 +13,14 @@ type GetCourses = {
     userId?: string
     title?: string
     categoryId?: string
+    categoryIds?: string[]
 }
 
 export const getCourses = async ({
     userId,
     title,
-    categoryId
+    categoryId,
+    categoryIds,
 }: GetCourses): Promise<CourseWithProgressWithCategory[]> => {
     try {
         const courses = await db.course.findMany({
@@ -27,7 +29,9 @@ export const getCourses = async ({
                 title: {
                     contains: title
                 },
-                categoryId
+                categoryId: categoryIds?.length
+                    ? { in: categoryIds }
+                    : categoryId ? { equals: categoryId } : undefined,
             },
             include: {
                 category: true,
