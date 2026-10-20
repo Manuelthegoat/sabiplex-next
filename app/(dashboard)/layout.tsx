@@ -7,8 +7,9 @@ import { redirect } from "next/navigation";
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const { userId } = auth();
   if (!userId) redirect("/sign-in");
-  const profile = await db.userProfile.findUnique({ where: { userId }, select: { id: true } });
+  const profile = await db.userProfile.findUnique({ where: { userId }, select: { id: true, displayName: true } });
   if (!profile) redirect("/profile/setup");
+  if (!profile.displayName) redirect("/profile/setup/display-name");
 
   return (
     <div className="min-h-full">

@@ -26,6 +26,11 @@ const guestroutes = [
         href: '/forum',
     },
     {
+        icon: UserRound,
+        label: "My profile",
+        href: '/profile',
+    },
+    {
         icon: GraduationCap,
         label: "Teach on Sabiplex",
         href: '/teacher-mode',

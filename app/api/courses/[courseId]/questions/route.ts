@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { notifyUser } from "@/lib/notifications";
 
 const questionSchema = z.object({
   title: z.string().trim().min(5).max(160),
@@ -70,5 +71,7 @@ export async function POST(
   const question = await db.courseQuestion.create({
     data: { ...parsed.data, courseId: params.courseId, userId, author },
   });
+  const course = await db.course.findUnique({ where: { id: params.courseId }, select: { userId: true } });
+  if (course) await notifyUser({ recipientId: course.userId, actorId: userId, type: "COURSE_QUESTION", message: `asked a question about “${question.title}”`, href: `/courses/${params.courseId}/qa#${question.id}` });
   return NextResponse.json(question, { status: 201 });
 }

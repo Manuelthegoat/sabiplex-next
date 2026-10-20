@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-type ForumCommentItem = { id: string; body: string; authorId: string; authorUsername: string; createdAt: string };
-export type ForumPostItem = { id: string; title: string; body: string; authorId: string; authorUsername: string; createdAt: string; comments: ForumCommentItem[]; _count: { comments: number; likes: number }; likedByMe: boolean };
+type ForumCommentItem = { id: string; body: string; authorId: string; authorUsername: string; authorDisplayName: string; authorAvatarUrl: string | null; createdAt: string };
+export type ForumPostItem = { id: string; title: string; body: string; authorId: string; authorUsername: string; authorDisplayName: string; authorAvatarUrl: string | null; createdAt: string; comments: ForumCommentItem[]; _count: { comments: number; likes: number }; likedByMe: boolean };
 
 function timeAgo(value: string) {
   const minutes = Math.floor((Date.now() - new Date(value).getTime()) / 60000);
@@ -21,7 +21,7 @@ function timeAgo(value: string) {
   return days < 7 ? `${days}d ago` : new Date(value).toLocaleDateString();
 }
 
-export function ForumFeed({ initialPosts, username, userId }: { initialPosts: ForumPostItem[]; username: string; userId: string }) {
+export function ForumFeed({ initialPosts, username, displayName, avatarUrl, userId }: { initialPosts: ForumPostItem[]; username: string; displayName: string; avatarUrl: string | null; userId: string }) {
   const [posts, setPosts] = useState(initialPosts);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -66,21 +66,27 @@ export function ForumFeed({ initialPosts, username, userId }: { initialPosts: Fo
 
   return <div className="space-y-5">
     <form onSubmit={createPost} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">{username.slice(0, 1).toUpperCase()}</div>
+      <div className="mb-1 flex items-center gap-3"><Avatar name={displayName} src={avatarUrl} size="h-10 w-10" /><div><p className="text-sm font-bold">{displayName}</p><p className="text-xs text-slate-500">@{username}</p></div></div>
       <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Give your post a title" minLength={4} maxLength={120} required />
       <Textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="What would you like to share with the community?" rows={4} minLength={10} maxLength={4000} required />
       <div className="flex items-center justify-between gap-3"><span className="text-xs text-slate-400">Posting as @{username}</span><Button disabled={busy || title.trim().length < 4 || body.trim().length < 10} className="gap-2"><Send className="h-4 w-4" />{busy ? "Posting..." : "Post"}</Button></div>
     </form>
 
-    {posts.map((post) => <article key={post.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <header className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-neutral-100 font-bold text-neutral-800">{post.authorUsername.slice(0, 1).toUpperCase()}</span><div><p className="font-bold text-slate-900">@{post.authorUsername}</p><time className="text-xs text-slate-500" dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time></div></div>{post.authorId === userId && <button type="button" aria-label="Delete post" onClick={() => deletePost(post.id)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>}</header>
+    {posts.map((post) => <article key={post.id} id={post.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <header className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><Avatar name={post.authorDisplayName} src={post.authorAvatarUrl} size="h-10 w-10" /><div><p className="font-bold text-slate-900">{post.authorDisplayName}</p><p className="text-xs text-slate-500">@{post.authorUsername} · <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time></p></div></div>{post.authorId === userId && <button type="button" aria-label="Delete post" onClick={() => deletePost(post.id)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>}</header>
       <h2 className="mt-4 text-lg font-bold text-slate-950">{post.title}</h2><p className="mt-2 whitespace-pre-line leading-7 text-slate-700">{post.body}</p>
       <div className="mt-5 flex gap-5 border-y border-slate-100 py-3 text-sm"><button type="button" onClick={() => toggleLike(post)} aria-pressed={post.likedByMe} className={`inline-flex items-center gap-2 font-semibold ${post.likedByMe ? "text-rose-600" : "text-slate-500 hover:text-rose-600"}`}><Heart className={`h-4 w-4 ${post.likedByMe ? "fill-current" : ""}`} />{post._count.likes} likes</button><span className="inline-flex items-center gap-2 text-slate-500"><MessageCircle className="h-4 w-4" />{post._count.comments} replies</span></div>
-      <div className="space-y-3 pt-4">{post.comments.map((comment) => <div key={comment.id} className="rounded-xl bg-slate-50 px-4 py-3"><div className="flex items-baseline justify-between gap-3"><p className="text-sm font-bold text-slate-800">@{comment.authorUsername}</p><time className="shrink-0 text-[11px] text-slate-400" dateTime={comment.createdAt}>{timeAgo(comment.createdAt)}</time></div><p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{comment.body}</p></div>)}{post._count.comments > post.comments.length && <p className="text-xs text-slate-500">Showing recent replies</p>}</div>
+      <div className="space-y-3 pt-4">{post.comments.map((comment) => <div key={comment.id} className="flex gap-3 rounded-xl bg-slate-50 px-4 py-3"><Avatar name={comment.authorDisplayName} src={comment.authorAvatarUrl} size="h-8 w-8" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-x-3"><p className="text-sm font-bold text-slate-800">{comment.authorDisplayName} <span className="font-normal text-slate-500">@{comment.authorUsername}</span></p><time className="shrink-0 text-[11px] text-slate-400" dateTime={comment.createdAt}>{timeAgo(comment.createdAt)}</time></div><p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{comment.body}</p></div></div>)}{post._count.comments > post.comments.length && <p className="text-xs text-slate-500">Showing recent replies</p>}</div>
       <CommentForm onSubmit={(commentBody, reset) => addComment(post.id, commentBody, reset)} />
     </article>)}
     {!posts.length && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center"><MessageCircle className="mx-auto h-8 w-8 text-slate-400" /><h2 className="mt-3 font-bold">Start the conversation</h2><p className="mt-1 text-sm text-slate-500">Your post will be the first one in the forum.</p></div>}
   </div>;
+}
+
+function Avatar({ name, src, size }: { name: string; src: string | null; size: string }) {
+  return src
+    ? <img src={src} alt={`${name}'s avatar`} className={`${size} shrink-0 rounded-full border border-slate-200 object-cover`} />
+    : <span aria-label={`${name}'s avatar`} className={`${size} grid shrink-0 place-items-center rounded-full bg-neutral-100 font-bold text-neutral-800`}>{name.slice(0, 1).toUpperCase()}</span>;
 }
 
 function CommentForm({ onSubmit }: { onSubmit: (body: string, reset: () => void) => void }) {

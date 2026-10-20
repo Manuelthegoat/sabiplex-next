@@ -85,7 +85,7 @@ export function CourseQA({ courseId, initialQuestions }: { courseId: string; ini
 function QuestionCard({ question, disabled, onReply }: { question: QuestionItem; disabled: boolean; onReply: (body: string) => Promise<boolean> }) {
   const [answer, setAnswer] = useState("");
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <article id={question.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <p className="text-xs font-medium text-slate-500">{question.author} · {new Date(question.createdAt).toLocaleDateString()}</p>
       <h2 className="mt-2 text-lg font-bold text-slate-900">{question.title}</h2>
       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{question.body}</p>

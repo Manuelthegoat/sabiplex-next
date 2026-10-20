@@ -15,20 +15,22 @@ function safeExternalUrl(value: string | null | undefined) {
 }
 
 export default async function TeacherPublicProfilePage({ params }: { params: { teacherId: string } }) {
-  const [profile, courses] = await Promise.all([
+  const [profile, courses, communityProfile] = await Promise.all([
     db.teacherProfile.findUnique({ where: { userId: params.teacherId } }),
     db.course.findMany({
       where: { userId: params.teacherId, isPublished: true },
       select: { id: true, title: true, description: true, imageUrl: true, price: true, _count: { select: { chapters: true, purchases: true } } },
       orderBy: { createdAt: "desc" },
     }),
+    db.userProfile.findUnique({ where: { userId: params.teacherId }, select: { displayName: true, avatarUrl: true } }),
   ]);
   if (courses.length === 0) notFound();
 
   const teacher = await clerkClient().users.getUser(params.teacherId).catch(() => null);
   if (!teacher) notFound();
 
-  const name = teacher.fullName || teacher.username || "Sabiplex teacher";
+  const name = communityProfile?.displayName || teacher.fullName || teacher.username || "Sabiplex teacher";
+  const avatarUrl = communityProfile?.avatarUrl || teacher.imageUrl;
   const websiteUrl = safeExternalUrl(profile?.websiteUrl);
   const linkedinUrl = safeExternalUrl(profile?.linkedinUrl);
   const studentCount = courses.reduce((total, course) => total + course._count.purchases, 0);
@@ -39,7 +41,7 @@ export default async function TeacherPublicProfilePage({ params }: { params: { t
         <Link href="/search" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /> Browse courses</Link>
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <img src={teacher.imageUrl} alt="" className="h-24 w-24 rounded-full object-cover ring-4 ring-slate-100" />
+            <img src={avatarUrl} alt="" className="h-24 w-24 rounded-full object-cover ring-4 ring-slate-100" />
           <div className="min-w-0 flex-1"><p className="eyebrow">Sabiplex teacher</p><h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">{name}</h1>{profile?.headline && <p className="mt-2 text-lg text-slate-600">{profile.headline}</p>}</div>
           </div>
           <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 border-y border-slate-100 py-5 text-sm text-slate-600"><span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4" />{courses.length} {courses.length === 1 ? "course" : "courses"}</span><span className="inline-flex items-center gap-2"><Users className="h-4 w-4" />{studentCount} {studentCount === 1 ? "learner" : "learners"}</span></div>

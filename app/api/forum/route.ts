@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getCommunityIdentities } from "@/lib/community-profile";
 
 const postSchema = z.object({ title: z.string().trim().min(4).max(120), body: z.string().trim().min(10).max(4000) });
 
@@ -21,16 +22,34 @@ export async function GET() {
       likes: { where: { authorId: userId }, select: { id: true }, take: 1 },
     },
   });
-  return NextResponse.json(posts.map(({ likes, ...post }) => ({ ...post, likedByMe: likes.length > 0 })));
+  const identities = await getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)]));
+  return NextResponse.json(posts.map(({ likes, ...post }) => ({
+    ...post,
+    authorDisplayName: identities[post.authorId]?.displayName || post.authorUsername,
+    authorAvatarUrl: identities[post.authorId]?.avatarUrl || null,
+    comments: post.comments.map((comment) => ({
+      ...comment,
+      authorDisplayName: identities[comment.authorId]?.displayName || comment.authorUsername,
+      authorAvatarUrl: identities[comment.authorId]?.avatarUrl || null,
+    })),
+    likedByMe: likes.length > 0,
+  })));
 }
 
 export async function POST(request: Request) {
   const { userId } = auth();
   if (!userId) return NextResponse.json({ error: "Sign in to post." }, { status: 401 });
-  const profile = await db.userProfile.findUnique({ where: { userId }, select: { username: true } });
+  const profile = await db.userProfile.findUnique({ where: { userId }, select: { username: true, displayName: true, avatarUrl: true } });
   if (!profile) return NextResponse.json({ error: "Choose a username to post." }, { status: 428 });
   const parsed = postSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid post." }, { status: 400 });
   const post = await db.forumPost.create({ data: { ...parsed.data, authorId: userId, authorUsername: profile.username } });
-  return NextResponse.json({ ...post, comments: [], _count: { comments: 0, likes: 0 }, likedByMe: false }, { status: 201 });
+  return NextResponse.json({
+    ...post,
+    authorDisplayName: profile.displayName || profile.username,
+    authorAvatarUrl: profile.avatarUrl,
+    comments: [],
+    _count: { comments: 0, likes: 0 },
+    likedByMe: false,
+  }, { status: 201 });
 }

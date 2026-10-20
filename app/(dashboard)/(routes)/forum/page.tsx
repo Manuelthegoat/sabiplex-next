@@ -1,12 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getCommunityIdentities } from "@/lib/community-profile";
 import { ForumFeed, type ForumPostItem } from "./forum-feed";
 
 export default async function ForumPage() {
   const { userId } = auth();
   if (!userId) redirect("/sign-in");
-  const profile = await db.userProfile.findUnique({ where: { userId }, select: { username: true } });
+  const profile = await db.userProfile.findUnique({
+    where: { userId },
+    select: { username: true, displayName: true, avatarUrl: true },
+  });
   if (!profile) redirect("/profile/setup");
 
   const posts = await db.forumPost.findMany({
@@ -19,12 +23,20 @@ export default async function ForumPage() {
       likes: { where: { authorId: userId }, select: { id: true }, take: 1 },
     },
   });
+  const identities = await getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)]));
   const initialPosts: ForumPostItem[] = posts.map(({ likes, ...post }) => ({
     ...post,
+    authorDisplayName: identities[post.authorId]?.displayName || post.authorUsername,
+    authorAvatarUrl: identities[post.authorId]?.avatarUrl || null,
     createdAt: post.createdAt.toISOString(),
-    comments: post.comments.map((comment) => ({ ...comment, createdAt: comment.createdAt.toISOString() })),
+    comments: post.comments.map((comment) => ({
+      ...comment,
+      authorDisplayName: identities[comment.authorId]?.displayName || comment.authorUsername,
+      authorAvatarUrl: identities[comment.authorId]?.avatarUrl || null,
+      createdAt: comment.createdAt.toISOString(),
+    })),
     likedByMe: likes.length > 0,
   }));
 
-  return <main className="page-shell min-h-full px-5 py-8 md:px-8 md:py-12"><div className="mx-auto max-w-3xl"><p className="eyebrow">Sabiplex community</p><h1 className="mt-1 text-3xl font-black tracking-tight">Forum</h1><p className="mt-2 text-slate-600">Share ideas, ask questions, and learn together. You’re posting as <strong>@{profile.username}</strong>.</p><div className="mt-7"><ForumFeed initialPosts={initialPosts} username={profile.username} userId={userId} /></div></div></main>;
+  return <main className="page-shell min-h-full px-5 py-8 md:px-8 md:py-12"><div className="mx-auto max-w-3xl"><p className="eyebrow">Sabiplex community</p><h1 className="mt-1 text-3xl font-black tracking-tight">Forum</h1><p className="mt-2 text-slate-600">Share ideas, ask questions, and learn together. You’re posting as <strong>{profile.displayName || profile.username} · @{profile.username}</strong>.</p><div className="mt-7"><ForumFeed initialPosts={initialPosts} username={profile.username} displayName={profile.displayName || profile.username} avatarUrl={profile.avatarUrl || null} userId={userId} /></div></div></main>;
 }
