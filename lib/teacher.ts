@@ -9,6 +9,8 @@ const getConfiguredTeacherIds = () =>
 export const isTeacherAdmin = (userId?: string | null) =>
   !!userId && getConfiguredTeacherIds().includes(userId);
 
+export const isTeacher = isTeacherAdmin;
+
 export const hasTeacherAccess = async (userId?: string | null) => {
   if (!userId) return false;
   if (isTeacherAdmin(userId)) return true;
