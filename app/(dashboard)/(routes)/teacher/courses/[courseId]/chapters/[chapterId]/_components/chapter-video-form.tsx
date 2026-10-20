@@ -2,7 +2,6 @@
 
 import * as z from "zod";
 import axios from "axios";
-import MuxPlayer from "@mux/mux-player-react"
 
 import { useRouter } from "next/navigation";
 
@@ -12,12 +11,12 @@ import { ImageIcon, Pencil, PlusCircle, Video } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-import { Chapter, Course, MuxData } from "@prisma/client";
+import { Chapter } from "@prisma/client";
 import Image from "next/image";
 import { FileUpload } from "@/components/file-upload";
 
 interface ChapterVideoFormProps {
-  initialData: Chapter & {muxData?: MuxData | null};
+  initialData: Chapter;
   courseId: string;
   chapterId: string
 }
@@ -69,10 +68,8 @@ export const ChapterVideoForm = ({ initialData, courseId, chapterId }: ChapterVi
             <Video className="h-10 w-10 text-slate-500" />
           </div>
         ) : (
-          <div className="relative aspect-video mt-2">
-           <MuxPlayer
-            playbackId={initialData?.muxData?.playbackId || ""}
-           />
+          <div className="relative aspect-video mt-2 overflow-hidden rounded-xl bg-slate-950">
+           <video className="h-full w-full" controls src={initialData.videoUrl} />
           </div>
         ))}
       {isEditing && (
@@ -92,7 +89,7 @@ export const ChapterVideoForm = ({ initialData, courseId, chapterId }: ChapterVi
       )}
       {initialData.videoUrl && !isEditing && (
         <div className="text-xs text-muted-foreground mt-2">
-          Videos can take a few minutes to process. Refresh the page if video does not appear
+          Your video is ready to play immediately after upload.
         </div>
       )}
     </div>

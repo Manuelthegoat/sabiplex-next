@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils"
 
 
 const bannerVariants = cva(
-    "border text-center p-4 text-sm flex items-center w-full",
+    "rounded-xl border px-4 py-3 text-sm font-medium flex items-center w-full shadow-sm",
     {
         variants: {
             variant: {
-                warning: "bg-yellow-200/80 border-yellow-30 text-primary",
-                success: "bg-emerald-700 border-emerald-800 text-secondary"
+                warning: "bg-amber-50 border-amber-200 text-amber-900",
+                success: "bg-emerald-50 border-emerald-200 text-emerald-900"
             }
         },
         defaultVariants: {

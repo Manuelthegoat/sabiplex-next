@@ -24,7 +24,10 @@ export const CourseEnrollButton = ({
 
             window.location.assign(response.data.url)
         } catch (error) {
-            toast.error("Something went wrong")
+            const message = axios.isAxiosError(error) && typeof error.response?.data === "string"
+                ? error.response.data
+                : "Could not start checkout. Please try again."
+            toast.error(message)
         }finally{
             setIsLoading(false)
         }

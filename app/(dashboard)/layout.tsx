@@ -3,14 +3,14 @@ import { Sidebar } from "./_components/sidebar";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="h-full">
-      <div className="h-[80px] md:pl-56 fixed inset-y-0 w-full z-50">
+    <div className="min-h-full">
+      <div className="h-[76px] md:pl-64 fixed inset-y-0 w-full z-50 print:hidden">
         <Navbar />
       </div>
-      <div className="hidden md:flex h-full w-56 flex-col fixed  inset-y-0 z-50">
+      <div className="hidden md:flex h-full w-64 flex-col fixed inset-y-0 z-50 print:hidden">
         <Sidebar />
       </div>
-      <main className="md:pl-56 pt-[80px] h-full">{children}</main>
+      <main className="md:pl-64 pt-[76px] min-h-full print:pl-0 print:pt-0">{children}</main>
     </div>
   );
 };

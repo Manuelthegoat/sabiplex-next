@@ -6,6 +6,7 @@ type CourseWithProgressWithCategory = Course & {
     category: Category | null
     chapters: {id: string} []
     progress: number | null
+    reviews?: {rating: number}[]
 }
 
 interface CoursesListProps {
@@ -17,7 +18,7 @@ export const CoursesList = ({
 }: CoursesListProps) => {
     return (
         <div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {items.map((item) => (
                <CourseCard 
                 key={item.id}
@@ -28,11 +29,13 @@ export const CoursesList = ({
                 price={item.price!}
                 progress={item.progress}
                 category={item?.category?.name!}
+                ratingAverage={item.reviews?.length ? item.reviews.reduce((sum, review) => sum + review.rating, 0) / item.reviews.length : null}
+                reviewCount={item.reviews?.length ?? 0}
                />
             ))}
         </div>
         {items.length === 0 && (
-            <div className="text-center text-sm text-muted-foreground mt-10">No courses found</div>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 py-16 text-center text-sm text-muted-foreground mt-6">No courses here yet. Try exploring a different topic.</div>
         )}
         </div>
     )

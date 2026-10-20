@@ -3,7 +3,6 @@ import { Categories } from "./_components/categories";
 import { SearchInput } from "@/components/search-input";
 import { getCourses } from "@/actions/get-courses";
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { CoursesList } from "@/components/courses-list";
 
 
@@ -19,9 +18,6 @@ const SearchPage = async ({
 }: SearchPageProps) => {
   const {userId} = auth()
 
-  if (!userId) {
-    return redirect("/")
-  }
   const categories = await db.category.findMany({
     orderBy: {
       name: "asc",
@@ -29,17 +25,20 @@ const SearchPage = async ({
   });
 
   const courses = await getCourses({
-    userId,
+    userId: userId ?? undefined,
     ...searchParams
   })
   return (
     <>
-    <div className="px-6 pt-6 md:hidden md:mb-0 blo">
+    <div className="page-shell px-5 pt-6 md:hidden">
       <SearchInput />
     </div>
-    <div className="p-6 space-y-4">
+    <div className="page-shell min-h-full p-5 md:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+      <div><p className="eyebrow">Explore</p><h1 className="mt-1 text-3xl font-black tracking-tight">Find your next skill</h1><p className="mt-2 text-slate-500">Browse courses that meet you where your curiosity starts.</p></div>
       <Categories items={categories} />
       <CoursesList items={courses} />
+      </div>
     </div>
     </>
   );

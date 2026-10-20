@@ -38,10 +38,24 @@ export async function POST(
       return new NextResponse('Not found', { status: 404 });
     }
 
+    if (typeof course.price !== 'number' || !Number.isFinite(course.price) || course.price <= 0) {
+      return new NextResponse('This course does not have a valid price yet.', { status: 400 });
+    }
+
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!paystackSecretKey) {
+      return new NextResponse('Paystack is not configured on the server.', { status: 500 });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl || !URL.canParse(appUrl)) {
+      return new NextResponse('The app callback URL is not configured correctly.', { status: 500 });
+    }
+
     const paystackPayload = {
       email: user.emailAddresses[0].emailAddress,
-      amount: Math.round(course.price! * 100), // Amount in kobo (smallest Paystack unit)
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}?success=1`,
+      amount: String(Math.round(course.price * 100)), // Paystack expects the amount in the currency's smallest unit.
+      callback_url: `${appUrl.replace(/\/$/, '')}/courses/${course.id}?success=1`,
       metadata: {
         userId: user.id,
         courseId: course.id,
@@ -53,21 +67,32 @@ export async function POST(
       paystackPayload,
       {
         headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          Authorization: `Bearer ${paystackSecretKey}`,
           'Content-Type': 'application/json',
         },
       }
     );
 
-    if (paystackResponse.status !== 200) {
-      return new NextResponse('Failed to initialize payment', { status: 500 });
+    if (paystackResponse.status !== 200 || !paystackResponse.data?.status) {
+      return new NextResponse(paystackResponse.data?.message || 'Failed to initialize payment.', { status: 502 });
     }
 
     const { authorization_url } = paystackResponse.data.data;
 
+    if (!authorization_url) {
+      return new NextResponse('Paystack did not return a checkout URL.', { status: 502 });
+    }
+
     return NextResponse.json({ url: authorization_url });
   } catch (error) {
-    console.log('[COURSE_ID_CHECKOUT]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error('[COURSE_ID_CHECKOUT]', error);
+    if (axios.isAxiosError(error)) {
+      const paystackMessage = error.response?.data?.message;
+      return new NextResponse(
+        typeof paystackMessage === 'string' ? paystackMessage : 'Paystack could not initialize this payment.',
+        { status: 502 }
+      );
+    }
+    return new NextResponse('Could not start checkout. Please try again.', { status: 500 });
   }
 }

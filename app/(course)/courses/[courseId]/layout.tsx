@@ -15,10 +15,6 @@ const CourseLayout = async ({
 
     const {userId} = auth()
 
-    if (!userId) {
-        return redirect("/")
-    }
-
     const course = await db.course.findUnique({
         where: {
             id: params.courseId,
@@ -31,7 +27,7 @@ const CourseLayout = async ({
                 include: {
                     userProgress: {
                         where: {
-                            userId
+                            userId: userId ?? "__anonymous__"
                         }
                     }
                 },
@@ -46,11 +42,11 @@ const CourseLayout = async ({
         return redirect("/")
     }
 
-    const progressCount = await getProgress(userId, course.id)
+    const progressCount = userId ? await getProgress(userId, course.id) : 0
 
     return (
-        <div className="h-full">
-            <div className="h-[80px] md:pl-80 fixed inset-y-0 w-full z-50">
+        <div className="min-h-full bg-slate-50">
+            <div className="h-[76px] md:pl-80 fixed inset-y-0 w-full z-50">
                 <CourseNavbar
                     course={course}
                     progressCount={progressCount}
@@ -62,7 +58,7 @@ const CourseLayout = async ({
                     progressCount={progressCount}
                 />
             </div>
-            <main className="md:pl-80 pt-[80px] h-full">
+            <main className="md:pl-80 pt-[76px] min-h-full">
 
             {children}
             </main>

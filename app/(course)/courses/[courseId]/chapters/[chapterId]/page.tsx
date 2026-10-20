@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Preview } from "@/components/preview";
 import { File } from "lucide-react";
 import { CourseProgressButton } from "./_components/course-progress-button";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const ChapterIdPage = async ({
     params
@@ -17,20 +19,15 @@ const ChapterIdPage = async ({
 
     const {userId} = auth()
 
-    if (!userId) {
-        return redirect('/')
-    }
-
     const {
         chapter,
         course,
-        muxData,
         attachments,
         nextChapter,
         userProgress,
         purchase
     } = await getChapter({
-        userId,
+        userId: userId ?? undefined,
         chapterId: params.chapterId,
         courseId: params.courseId
     })
@@ -63,7 +60,7 @@ const ChapterIdPage = async ({
                     title={chapter.title}
                     courseId={params.courseId}
                     nextChapterId={nextChapter?.id}
-                    playbackId={muxData?.playbackId!}
+                    videoUrl={chapter.videoUrl || undefined}
                     isLocked={isLocked}
                     completeOnEnd={completeOnEnd}
                 />
@@ -80,11 +77,17 @@ const ChapterIdPage = async ({
                         chapterId={chapter.id}
                         courseId={params.courseId}
                       />
-                    ): (
+                    ): userId ? (
                         <CourseEnrollButton 
                             courseId={params.courseId}
                             price={course.price!}
                         />
+                    ) : (
+                        <Button asChild className="w-full md:w-auto">
+                            <Link href={`/sign-in?redirect_url=${encodeURIComponent(`/courses/${params.courseId}`)}`}>
+                                Sign in to enroll
+                            </Link>
+                        </Button>
                     )}
                 </div>
                 <Separator />

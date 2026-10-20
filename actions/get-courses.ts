@@ -6,10 +6,11 @@ type CourseWithProgressWithCategory = Course & {
     category: Category | null
     chapters: {id: string} []
     progress: number|null
+    reviews: {rating: number}[]
 }
 
 type GetCourses = {
-    userId: string
+    userId?: string
     title?: string
     categoryId?: string
 }
@@ -39,10 +40,9 @@ export const getCourses = async ({
                     }
                 },
                 purchases: {
-                    where: {
-                        userId
-                    }
-                }
+                    where: { userId: userId ?? "__anonymous__" }
+                },
+                reviews: { select: { rating: true } }
             },
             orderBy: {
                 createdAt: "desc"
@@ -51,7 +51,7 @@ export const getCourses = async ({
 
         const courseWithProgress: CourseWithProgressWithCategory[] = await Promise.all(
             courses.map(async course => {
-                if (course.purchases.length === 0) {
+                if (!userId || course.purchases.length === 0) {
                     return {
                         ...course,
                         progress: null

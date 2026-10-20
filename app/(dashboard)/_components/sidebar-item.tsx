@@ -19,9 +19,7 @@ export const SidebarItem = ({ icon: Icon, label, href }: SidebarItemProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const IsActive =
-    (pathname === "/" && href === "/") ||
-    pathname === href ||
+  const IsActive = pathname === href ||
     pathname?.startsWith(`${href}/`);
 
   const onClick = () => {
@@ -45,24 +43,18 @@ export const SidebarItem = ({ icon: Icon, label, href }: SidebarItemProps) => {
       onClick={onClick}
       type="button"
       className={cn(
-        "flex items-center gap-x-2 text-slate-500 text-sm font-[500] pl-6 transition-all hover:text-slate-600 hover:bg-slate-300/20",
+        "mx-3 flex items-center gap-x-2 rounded-xl px-4 text-left text-sm font-medium text-slate-400 transition-all hover:bg-white/10 hover:text-white",
         IsActive &&
-          "text-sky-700 bg-sky-200/20 hover:bg-sky-200/20 hover:text-sky-700"
+          "bg-indigo-500/20 text-white hover:bg-indigo-500/20 hover:text-white"
       )}
     >
       <div className="flex items-center gap-x-2 py-4">
         <Icon
           size={22}
-          className={cn("text-slate-500", IsActive && "text-sky-700")}
+          className={cn("text-slate-400", IsActive && "text-indigo-300")}
         />
         {label}
       </div>
-      <div
-        className={cn(
-          "ml-auto opacity-0 border-2 border-sky-700 h-full transition-all",
-          IsActive && "opacity-100"
-        )}
-      />
     </button>
   );
 };

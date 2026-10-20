@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton
-} from '@clerk/nextjs'
+import { ClerkProvider } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/providers/toaster-provider";
 import { ConfettiProvider } from "@/components/providers/confetti-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sabiplex App",
-  description: "Discover the Ultimate learning companion",
+  title: "Sabiplex | Learn without limits",
+  description: "A modern learning platform for ambitious people.",
 };
 
 export default function RootLayout({
@@ -25,12 +19,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen`}>
         <ToastProvider />
         <ConfettiProvider />
         {children}
       </body>
     </html>
-  </ClerkProvider>
+    </ClerkProvider>
   );
 }
