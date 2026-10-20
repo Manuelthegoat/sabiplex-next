@@ -52,8 +52,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
             ) {
                 await db.purchase.upsert({
                     where: { userId_courseId: { userId, courseId: course.id } },
-                    update: {},
-                    create: { userId, courseId: course.id },
+                    update: { amountPaidKobo: transaction.amount, currency: transaction.currency },
+                    create: { userId, courseId: course.id, amountPaidKobo: transaction.amount, currency: transaction.currency },
                 });
                 paymentVerified = true;
             }
@@ -98,7 +98,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
     return (
         <div className="min-h-full bg-slate-50 px-5 py-8 md:px-8 md:py-12">
             <div className="mx-auto max-w-6xl">
-                <Link href="/search" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-600">
+                <Link href="/search" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-neutral-600">
                     <ArrowLeft className="h-4 w-4" /> Browse courses
                 </Link>
 
@@ -111,7 +111,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
                     <div className="space-y-8">
                         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-                            <div className="relative aspect-[16/8] bg-gradient-to-br from-indigo-700 via-violet-700 to-slate-950">
+                            <div className="relative aspect-[16/8] bg-gradient-to-br from-neutral-700 via-neutral-700 to-slate-950">
                                 {course.imageUrl && (
                                     <Image src={course.imageUrl} alt={course.title} fill unoptimized className="object-cover" priority />
                                 )}
@@ -123,8 +123,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                             </div>
                             <div className="p-6 sm:p-9">
                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
-                                    <span className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-indigo-600" /> {instructorName}</span>
-                                    <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-indigo-600" /> {course.chapters.length} {course.chapters.length === 1 ? "chapter" : "chapters"}</span>
+                                    <Link href={`/teachers/${course.userId}`} className="inline-flex items-center gap-2 hover:text-slate-950"><GraduationCap className="h-4 w-4 text-neutral-600" /> {instructorName}<span className="text-xs underline underline-offset-4">View profile</span></Link>
+                                    <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-neutral-600" /> {course.chapters.length} {course.chapters.length === 1 ? "chapter" : "chapters"}</span>
                                     {purchase && <span className="inline-flex items-center gap-2 font-semibold text-emerald-700"><CheckCircle2 className="h-4 w-4" /> Enrolled</span>}
                                 </div>
                                 <div className="mt-7">
@@ -144,14 +144,14 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                                     const canOpen = canWatchAll || chapter.isFree;
                                     const ChapterRow = (
                                         <div className={`flex items-center gap-4 py-4 ${canOpen ? "" : "opacity-75"}`}>
-                                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-700">{String(index + 1).padStart(2, "0")}</span>
+                                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-neutral-50 text-sm font-bold text-neutral-700">{String(index + 1).padStart(2, "0")}</span>
                                             <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-800">{chapter.title}</span><span className="mt-1 block text-xs text-slate-500">{chapter.isFree ? "Free preview" : "Course lesson"}</span></span>
-                                            {chapter.isFree ? <PlayCircle className="h-5 w-5 shrink-0 text-indigo-600" /> : canOpen ? <PlayCircle className="h-5 w-5 shrink-0 text-slate-400" /> : <LockKeyhole className="h-5 w-5 shrink-0 text-slate-400" />}
+                                            {chapter.isFree ? <PlayCircle className="h-5 w-5 shrink-0 text-neutral-600" /> : canOpen ? <PlayCircle className="h-5 w-5 shrink-0 text-slate-400" /> : <LockKeyhole className="h-5 w-5 shrink-0 text-slate-400" />}
                                         </div>
                                     );
 
                                     return canOpen ? (
-                                        <Link key={chapter.id} href={`/courses/${course.id}/chapters/${chapter.id}`} className="block transition hover:bg-indigo-50/50">
+                                        <Link key={chapter.id} href={`/courses/${course.id}/chapters/${chapter.id}`} className="block transition hover:bg-neutral-50/50">
                                             {ChapterRow}
                                         </Link>
                                     ) : (
@@ -163,9 +163,9 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                         </section>
 
                         {(purchase || course.userId === userId) && (
-                            <section className="flex flex-col gap-4 rounded-3xl border border-indigo-100 bg-indigo-50 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+                            <section className="flex flex-col gap-4 rounded-3xl border border-neutral-100 bg-neutral-50 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
                                 <div>
-                                    <p className="text-sm font-semibold text-indigo-700">Learning together</p>
+                                    <p className="text-sm font-semibold text-neutral-700">Learning together</p>
                                     <h2 className="mt-1 text-xl font-bold text-slate-900">Questions about this course?</h2>
                                     <p className="mt-1 text-sm text-slate-600">Ask the instructor and learn with other students.</p>
                                 </div>

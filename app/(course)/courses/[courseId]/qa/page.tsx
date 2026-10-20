@@ -40,7 +40,7 @@ export default async function CourseQAPage({ params }: { params: { courseId: str
   return (
     <main className="min-h-full bg-slate-50 px-5 py-8 md:px-8 md:py-12">
       <div className="mx-auto max-w-4xl">
-        <Link href={`/courses/${course.id}`} className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-indigo-600">
+        <Link href={`/courses/${course.id}`} className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-neutral-600">
           <ArrowLeft className="h-4 w-4" /> Back to {course.title}
         </Link>
         <div className="mb-7">

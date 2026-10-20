@@ -15,6 +15,27 @@ export async function PUT(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    if (typeof isCompleted !== 'boolean') {
+      return new NextResponse('Invalid progress value', { status: 400 });
+    }
+
+    const chapter = await db.chapter.findFirst({
+      where: {
+        id: params.chapterId,
+        courseId: params.courseId,
+        isPublished: true,
+        course: { isPublished: true },
+      },
+      select: { id: true },
+    });
+    const purchase = await db.purchase.findUnique({
+      where: { userId_courseId: { userId, courseId: params.courseId } },
+      select: { id: true },
+    });
+    if (!chapter || !purchase) {
+      return new NextResponse('Purchase and a published chapter are required', { status: 403 });
+    }
+
     const userProgress = await db.userProgress.upsert({
       where: {
         userId_chapterId: {

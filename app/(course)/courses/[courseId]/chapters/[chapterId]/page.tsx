@@ -10,6 +10,9 @@ import { File } from "lucide-react";
 import { CourseProgressButton } from "./_components/course-progress-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { db } from "@/lib/db";
+import { ChapterActivities } from "./_components/chapter-activities";
+import { ClipboardList } from "lucide-react";
 
 const ChapterIdPage = async ({
     params
@@ -39,6 +42,38 @@ const ChapterIdPage = async ({
     const isLocked = !chapter.isFree && !purchase
 
     const completeOnEnd = !!purchase && !userProgress?.isCompleted
+    const storedActivities = await db.chapter.findUnique({
+        where: { id: chapter.id },
+        select: {
+            quiz: {
+                select: {
+                    id: true,
+                    title: true,
+                    passPercent: true,
+                    questions: {
+                        orderBy: { position: "asc" },
+                        select: { id: true, prompt: true, options: true, explanation: true },
+                    },
+                    attempts: {
+                        where: { userId: userId ?? "__anonymous__" },
+                        select: { score: true, total: true, passed: true },
+                    },
+                },
+            },
+            assignment: {
+                select: {
+                    id: true,
+                    title: true,
+                    instructions: true,
+                    submissions: {
+                        where: { userId: userId ?? "__anonymous__" },
+                        select: { response: true, status: true, score: true, feedback: true, submittedAt: true },
+                    },
+                },
+            },
+        },
+    });
+    const hasActivities = !!storedActivities?.quiz || !!storedActivities?.assignment;
     return ( 
         <div>
            {userProgress?.isCompleted && (
@@ -103,7 +138,7 @@ const ChapterIdPage = async ({
                                 href={attachment.url}
                                 target="_blank" 
                                 key={attachment.id}
-                                className="flex items-center p-3 w-full bg-sky-200 border text-sky-700 rounded-md hover:underline"
+                                className="flex items-center p-3 w-full bg-neutral-200 border text-neutral-700 rounded-md hover:underline"
                                 >
                                     <File />
                                     <p className="line-clamp-1">
@@ -116,6 +151,34 @@ const ChapterIdPage = async ({
                 )}
             </div>
            </div>
+           {purchase && storedActivities && (
+             <ChapterActivities
+                courseId={params.courseId}
+                chapterId={params.chapterId}
+                quiz={storedActivities.quiz ? {
+                    id: storedActivities.quiz.id,
+                    title: storedActivities.quiz.title,
+                    passPercent: storedActivities.quiz.passPercent,
+                    questions: storedActivities.quiz.questions,
+                } : null}
+                attempt={storedActivities.quiz?.attempts[0] ?? null}
+                assignment={storedActivities.assignment ? {
+                    id: storedActivities.assignment.id,
+                    title: storedActivities.assignment.title,
+                    instructions: storedActivities.assignment.instructions,
+                } : null}
+                submission={storedActivities.assignment?.submissions[0] ? {
+                    ...storedActivities.assignment.submissions[0],
+                    submittedAt: storedActivities.assignment.submissions[0].submittedAt.toISOString(),
+                } : null}
+             />
+           )}
+           {!purchase && hasActivities && (
+             <section className="mx-auto mb-10 flex max-w-4xl items-center gap-3 rounded-xl border border-neutral-100 bg-neutral-50 p-5 text-sm text-neutral-900">
+                <ClipboardList className="h-5 w-5 shrink-0" />
+                Enroll in this course to access its quiz and assignment activities.
+             </section>
+           )}
         </div>
      );
 }

@@ -10,6 +10,7 @@ import { ChapterAccessForm } from "./_components/chapter-access-form";
 import { ChapterVideoForm } from "./_components/chapter-video-form";
 import { Banner } from "@/components/banner";
 import { ChapterActions } from "./_components/chapter-actions";
+import { ChapterActivitiesEditor } from "./_components/chapter-activities-editor";
 
 const ChapterIdPage = async ({
   params,
@@ -29,6 +30,8 @@ const ChapterIdPage = async ({
     },
     include: {
       muxData: true,
+      quiz: { include: { questions: { orderBy: { position: "asc" } } } },
+      assignment: true,
     },
   });
 
@@ -119,6 +122,14 @@ const ChapterIdPage = async ({
               initialData={chapter}
             />
           </div>
+        </div>
+        <div className="mx-auto mt-8 max-w-5xl px-6 pb-8">
+          <ChapterActivitiesEditor
+            courseId={params.courseId}
+            chapterId={params.chapterId}
+            initialQuiz={chapter.quiz}
+            initialAssignment={chapter.assignment}
+          />
         </div>
       </div>
     </>

@@ -1,7 +1,15 @@
 import { Navbar } from "./_components/navbar";
 import { Sidebar } from "./_components/sidebar";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
+  const { userId } = auth();
+  if (!userId) redirect("/sign-in");
+  const profile = await db.userProfile.findUnique({ where: { userId }, select: { id: true } });
+  if (!profile) redirect("/profile/setup");
+
   return (
     <div className="min-h-full">
       <div className="h-[76px] md:pl-64 fixed inset-y-0 w-full z-50 print:hidden">

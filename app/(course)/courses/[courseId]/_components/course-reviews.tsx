@@ -82,7 +82,7 @@ export function CourseReviews({ courseId, reviews: initialReviews, ownReview: in
             {Array.from({ length: 5 }, (_, index) => {
               const value = index + 1;
               return (
-                <button key={value} type="button" onClick={() => setRating(value)} aria-label={`${value} star${value === 1 ? "" : "s"}`} aria-pressed={rating === value} className="rounded p-1 text-amber-500 transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500">
+                <button key={value} type="button" onClick={() => setRating(value)} aria-label={`${value} star${value === 1 ? "" : "s"}`} aria-pressed={rating === value} className="rounded p-1 text-amber-500 transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-neutral-500">
                   <Star className={`h-7 w-7 ${value <= rating ? "fill-current" : ""}`} />
                 </button>
               );

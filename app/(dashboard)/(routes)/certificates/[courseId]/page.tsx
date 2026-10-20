@@ -66,22 +66,22 @@ export default async function CertificatePage({
         <PrintCertificateButton />
       </div>
 
-      <article className="relative overflow-hidden border-[10px] border-double border-indigo-700 bg-white px-8 py-14 text-center shadow-xl sm:px-16 sm:py-20 print:min-h-[7.5in] print:border-[10px] print:shadow-none">
-        <div className="absolute inset-3 border border-indigo-200" aria-hidden="true" />
+      <article className="relative overflow-hidden border-[10px] border-double border-neutral-700 bg-white px-8 py-14 text-center shadow-xl sm:px-16 sm:py-20 print:min-h-[7.5in] print:border-[10px] print:shadow-none">
+        <div className="absolute inset-3 border border-neutral-200" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-50 text-neutral-700">
             <Award className="h-9 w-9" />
           </div>
-          <p className="text-sm font-bold uppercase tracking-[0.35em] text-indigo-700">Certificate of completion</p>
+          <p className="text-sm font-bold uppercase tracking-[0.35em] text-neutral-700">Certificate of completion</p>
           <h2 className="mt-8 text-lg text-slate-500">This certificate is proudly presented to</h2>
-          <p className="mt-3 border-b border-indigo-200 px-4 pb-3 text-3xl font-bold text-slate-900 sm:text-5xl">{studentName}</p>
+          <p className="mt-3 border-b border-neutral-200 px-4 pb-3 text-3xl font-bold text-slate-900 sm:text-5xl">{studentName}</p>
           <p className="mt-8 text-lg text-slate-500">for successfully completing</p>
-          <p className="mt-3 text-2xl font-bold text-indigo-950 sm:text-4xl">{course.title}</p>
+          <p className="mt-3 text-2xl font-bold text-neutral-950 sm:text-4xl">{course.title}</p>
           <div className="mt-12 flex items-center gap-2 text-sm font-medium text-slate-500">
-            <GraduationCap className="h-5 w-5 text-indigo-700" />
+            <GraduationCap className="h-5 w-5 text-neutral-700" />
             Completed on {completionDate.toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })}
           </div>
-          <div className="mt-12 h-px w-48 bg-indigo-200" />
+          <div className="mt-12 h-px w-48 bg-neutral-200" />
           <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Sabiplex Learning</p>
         </div>
       </article>

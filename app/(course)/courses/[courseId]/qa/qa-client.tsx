@@ -91,8 +91,8 @@ function QuestionCard({ question, disabled, onReply }: { question: QuestionItem;
       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{question.body}</p>
 
       {question.answers.map((item) => (
-        <div key={item.id} className="ml-3 mt-4 border-l-2 border-indigo-200 pl-4 sm:ml-6">
-          <p className="text-xs font-medium text-indigo-700">{item.author} · {new Date(item.createdAt).toLocaleDateString()}</p>
+        <div key={item.id} className="ml-3 mt-4 border-l-2 border-neutral-200 pl-4 sm:ml-6">
+          <p className="text-xs font-medium text-neutral-700">{item.author} · {new Date(item.createdAt).toLocaleDateString()}</p>
           <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">{item.body}</p>
         </div>
       ))}

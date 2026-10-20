@@ -48,8 +48,8 @@ export async function POST(req: Request) {
 
     await db.purchase.upsert({
       where: { userId_courseId: { userId, courseId } },
-      update: {},
-      create: { courseId, userId },
+      update: { amountPaidKobo: data.amount, currency: data.currency },
+      create: { courseId, userId, amountPaidKobo: data.amount, currency: data.currency },
     });
   } else {
     return new NextResponse(`Unhandled event type: ${event}`, { status: 200 });

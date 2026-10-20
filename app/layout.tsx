@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Sabiplex | Learn without limits",
   description: "A modern learning platform for ambitious people.",
+  icons: { icon: "/logo.svg" },
 };
 
 export default function RootLayout({

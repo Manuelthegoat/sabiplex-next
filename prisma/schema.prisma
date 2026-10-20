@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
@@ -75,6 +75,8 @@ model Chapter {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   userProgress UserProgress[]
+  quiz         ChapterQuiz?
+  assignment   ChapterAssignment?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -107,13 +109,88 @@ model Purchase {
   id     String @id @default(uuid()) @map("_id")
   userId String
 
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  courseId       String
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  amountPaidKobo Int      @default(0)
+  currency       String   @default("NGN")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
 
   @@unique([userId, courseId])
   @@index([courseId])
+}
+
+model ChapterQuiz {
+  id          String         @id @default(uuid()) @map("_id")
+  title       String
+  passPercent Int            @default(70)
+  chapterId   String         @unique
+  chapter     Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model QuizQuestion {
+  id           String      @id @default(uuid()) @map("_id")
+  prompt       String
+  options      String[]
+  correctIndex Int
+  explanation  String?
+  position     Int
+  quizId       String
+  quiz         ChapterQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([quizId, position])
+}
+
+model QuizAttempt {
+  id        String      @id @default(uuid()) @map("_id")
+  userId    String
+  quizId    String
+  quiz      ChapterQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers   Int[]
+  score     Int
+  total     Int
+  passed    Boolean
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, quizId])
+  @@index([quizId])
+}
+
+model ChapterAssignment {
+  id           String                 @id @default(uuid()) @map("_id")
+  title        String
+  instructions String
+  chapterId    String                 @unique
+  chapter      Chapter                @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  submissions  AssignmentSubmission[]
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+}
+
+model AssignmentSubmission {
+  id           String            @id @default(uuid()) @map("_id")
+  userId       String
+  studentName  String
+  assignmentId String
+  assignment   ChapterAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  response     String
+  status       String            @default("SUBMITTED")
+  score        Int?
+  feedback     String?
+  submittedAt  DateTime          @default(now())
+  reviewedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([userId, assignmentId])
+  @@index([assignmentId, submittedAt])
 }
 
 model Review {
@@ -146,16 +223,103 @@ model CourseQuestion {
 }
 
 model CourseAnswer {
-  id         String        @id @default(uuid()) @map("_id")
+  id         String         @id @default(uuid()) @map("_id")
   body       String
   userId     String
   author     String
   questionId String
   question   CourseQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   @@index([questionId, createdAt])
+}
+
+model TeacherRole {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String   @unique
+  grantedBy String
+  createdAt DateTime @default(now())
+}
+
+model TeacherProfile {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String   @unique
+  headline    String?
+  bio         String?
+  expertise   String[] @default([])
+  websiteUrl  String?
+  linkedinUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserProfile {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String   @unique
+  username  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ForumPost {
+  id             String         @id @default(uuid()) @map("_id")
+  title          String
+  body           String
+  authorId       String
+  authorUsername String
+  comments       ForumComment[]
+  likes          ForumLike[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([createdAt])
+  @@index([authorId, createdAt])
+}
+
+model ForumComment {
+  id             String    @id @default(uuid()) @map("_id")
+  body           String
+  authorId       String
+  authorUsername String
+  postId         String
+  post           ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([postId, createdAt])
+}
+
+model ForumLike {
+  id        String    @id @default(uuid()) @map("_id")
+  authorId  String
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([postId, authorId])
+  @@index([authorId])
+}
+
+enum TeacherApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model TeacherApplication {
+  id         String                   @id @default(uuid()) @map("_id")
+  userId     String                   @unique
+  fullName   String
+  email      String
+  statement  String
+  status     TeacherApplicationStatus @default(PENDING)
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  @@index([status, createdAt])
 }
 
 model StripeCustomer {

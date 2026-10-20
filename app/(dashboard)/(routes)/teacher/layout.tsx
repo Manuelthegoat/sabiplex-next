@@ -1,15 +1,15 @@
-import { isTeacher } from "@/lib/teacher"
+import { hasTeacherAccess } from "@/lib/teacher"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
-const TeacherLayout = ({
+const TeacherLayout = async ({
     children
 } : {
     children: React.ReactNode
 }) => {
     const {userId} = auth()
-    if (!isTeacher(userId)) {
-        return redirect("/")
+    if (!(await hasTeacherAccess(userId))) {
+        return redirect("/teacher-mode")
     }
     return <>{children}</>
 }

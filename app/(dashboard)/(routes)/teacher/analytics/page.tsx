@@ -10,16 +10,18 @@ const AnalyticsPage = async () => {
   if (!userId) {
     return redirect("/");
   }
-  const { data, totalRevenue, totalSales } = await getAnalytics(userId);
+  const { data, totalRevenue, totalSales, unrecordedSales } = await getAnalytics(userId);
   return (
     <div className="page-shell min-h-full p-5 md:p-8">
       <div className="mx-auto max-w-7xl">
-        <p className="eyebrow">Teacher studio</p><h1 className="mt-1 text-3xl font-black tracking-tight">Performance</h1><p className="mt-2 text-slate-500">A clear view of your course impact and earnings.</p>
+        <p className="eyebrow">Teacher studio</p><h1 className="mt-1 text-3xl font-black tracking-tight">Earnings</h1><p className="mt-2 text-slate-500">Confirmed Paystack course payments and sales.</p>
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-        <div className=" grid grid-cols-1  md:grid-cols-2 gap-4 mb-4">
-          <DataCard value={totalSales} label="Total Sales" />
-          <DataCard value={totalRevenue} label="Total Revenue" shouldFormat />
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <DataCard value={totalSales} label="Total Enrollments" />
+          <DataCard value={totalRevenue} label="Recorded gross revenue" shouldFormat />
+          <DataCard value={unrecordedSales} label="Older sales without payment record" />
         </div>
+        <p className="mb-4 text-xs leading-5 text-slate-500">Revenue shows the confirmed amount received by the platform. Older purchases without a recorded Paystack amount are excluded. Teacher payouts are not processed from this dashboard.</p>
         <Chart data={data} />
       </div></div>
     </div>

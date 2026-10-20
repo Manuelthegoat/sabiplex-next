@@ -45,13 +45,13 @@ export const SidebarItem = ({ icon: Icon, label, href }: SidebarItemProps) => {
       className={cn(
         "mx-3 flex items-center gap-x-2 rounded-xl px-4 text-left text-sm font-medium text-slate-400 transition-all hover:bg-white/10 hover:text-white",
         IsActive &&
-          "bg-indigo-500/20 text-white hover:bg-indigo-500/20 hover:text-white"
+          "bg-neutral-500/20 text-white hover:bg-neutral-500/20 hover:text-white"
       )}
     >
       <div className="flex items-center gap-x-2 py-4">
         <Icon
           size={22}
-          className={cn("text-slate-400", IsActive && "text-indigo-300")}
+          className={cn("text-slate-400", IsActive && "text-neutral-300")}
         />
         {label}
       </div>
