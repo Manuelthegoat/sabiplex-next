@@ -30,10 +30,11 @@ export async function PATCH(request: Request) {
   const parsed = profileSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid profile" }, { status: 400 });
 
+  const expertise = parsed.data.expertise.filter((item, index, items) => items.indexOf(item) === index);
   const profile = await db.teacherProfile.upsert({
     where: { userId },
-    create: { userId, ...parsed.data, expertise: [...new Set(parsed.data.expertise)] },
-    update: { ...parsed.data, expertise: [...new Set(parsed.data.expertise)] },
+    create: { userId, ...parsed.data, expertise },
+    update: { ...parsed.data, expertise },
   });
   return NextResponse.json(profile);
 }
