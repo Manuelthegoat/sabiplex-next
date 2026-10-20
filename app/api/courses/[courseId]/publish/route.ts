@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { notifyTeacherFollowers } from "@/lib/notifications";
 
 
 
@@ -43,6 +44,7 @@ export async function PATCH(
             return new NextResponse("Missing Required Fields", { status: 401 });
           }
 
+          const wasPublished = course.isPublished;
           const publishedCourse = await db.course.update({
             where: {
               id: params.courseId,
@@ -52,6 +54,9 @@ export async function PATCH(
               isPublished: true,
             },
           });
+          if (!wasPublished) {
+            await notifyTeacherFollowers({ teacherId: userId, message: `published a new course: “${publishedCourse.title}”`, href: `/courses/${publishedCourse.id}` });
+          }
           return NextResponse.json(publishedCourse);
     } catch (error) {
         console.log("[COURSE_ID_PUBLISH]", error);

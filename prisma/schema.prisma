@@ -254,6 +254,17 @@ model TeacherProfile {
   updatedAt   DateTime @updatedAt
 }
 
+model TeacherFollow {
+  id         String   @id @default(uuid()) @map("_id")
+  followerId String
+  teacherId  String
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, teacherId])
+  @@index([teacherId, createdAt])
+  @@index([followerId])
+}
+
 model UserProfile {
   id        String   @id @default(uuid()) @map("_id")
   userId    String   @unique

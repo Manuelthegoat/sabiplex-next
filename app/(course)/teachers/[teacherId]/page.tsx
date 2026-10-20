@@ -1,8 +1,9 @@
-import { clerkClient } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, GraduationCap, Users } from "lucide-react";
+import { FollowTeacherButton } from "./follow-button";
 
 function safeExternalUrl(value: string | null | undefined) {
   if (!value) return null;
@@ -15,7 +16,8 @@ function safeExternalUrl(value: string | null | undefined) {
 }
 
 export default async function TeacherPublicProfilePage({ params }: { params: { teacherId: string } }) {
-  const [profile, courses, communityProfile] = await Promise.all([
+  const { userId } = auth();
+  const [profile, courses, communityProfile, followCount, existingFollow] = await Promise.all([
     db.teacherProfile.findUnique({ where: { userId: params.teacherId } }),
     db.course.findMany({
       where: { userId: params.teacherId, isPublished: true },
@@ -23,6 +25,10 @@ export default async function TeacherPublicProfilePage({ params }: { params: { t
       orderBy: { createdAt: "desc" },
     }),
     db.userProfile.findUnique({ where: { userId: params.teacherId }, select: { displayName: true, avatarUrl: true } }),
+    db.teacherFollow.count({ where: { teacherId: params.teacherId } }),
+    userId && userId !== params.teacherId
+      ? db.teacherFollow.findUnique({ where: { followerId_teacherId: { followerId: userId, teacherId: params.teacherId } }, select: { id: true } })
+      : Promise.resolve(null),
   ]);
   if (courses.length === 0) notFound();
 
@@ -43,8 +49,9 @@ export default async function TeacherPublicProfilePage({ params }: { params: { t
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <img src={avatarUrl} alt="" className="h-24 w-24 rounded-full object-cover ring-4 ring-slate-100" />
           <div className="min-w-0 flex-1"><p className="eyebrow">Sabiplex teacher</p><h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">{name}</h1>{profile?.headline && <p className="mt-2 text-lg text-slate-600">{profile.headline}</p>}</div>
+            {userId !== params.teacherId && <FollowTeacherButton teacherId={params.teacherId} initialFollowing={!!existingFollow} isSignedIn={!!userId} />}
           </div>
-          <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 border-y border-slate-100 py-5 text-sm text-slate-600"><span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4" />{courses.length} {courses.length === 1 ? "course" : "courses"}</span><span className="inline-flex items-center gap-2"><Users className="h-4 w-4" />{studentCount} {studentCount === 1 ? "learner" : "learners"}</span></div>
+          <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 border-y border-slate-100 py-5 text-sm text-slate-600"><span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4" />{courses.length} {courses.length === 1 ? "course" : "courses"}</span><span className="inline-flex items-center gap-2"><Users className="h-4 w-4" />{studentCount} {studentCount === 1 ? "learner" : "learners"}</span><span>{followCount} {followCount === 1 ? "follower" : "followers"}</span></div>
           {profile?.bio ? <div className="mt-7"><h2 className="text-lg font-bold">About</h2><p className="mt-2 whitespace-pre-line leading-7 text-slate-600">{profile.bio}</p></div> : <p className="mt-7 text-sm text-slate-500">This teacher has not added a bio yet.</p>}
           {!!profile?.expertise.length && <div className="mt-6"><h2 className="text-sm font-bold text-slate-900">Areas of expertise</h2><div className="mt-3 flex flex-wrap gap-2">{profile.expertise.map((topic) => <span key={topic} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700">{topic}</span>)}</div></div>}
           {(websiteUrl || linkedinUrl) && <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">{websiteUrl && <a href={websiteUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">Website</a>}{linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">LinkedIn</a>}</div>}

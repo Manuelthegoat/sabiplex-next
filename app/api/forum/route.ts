@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCommunityIdentities } from "@/lib/community-profile";
+import { notifyTeacherFollowers } from "@/lib/notifications";
+import { hasTeacherAccess } from "@/lib/teacher";
 
 const postSchema = z.object({ title: z.string().trim().min(4).max(120), body: z.string().trim().min(10).max(4000) });
 
@@ -44,6 +46,9 @@ export async function POST(request: Request) {
   const parsed = postSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid post." }, { status: 400 });
   const post = await db.forumPost.create({ data: { ...parsed.data, authorId: userId, authorUsername: profile.username } });
+  if (await hasTeacherAccess(userId)) {
+    await notifyTeacherFollowers({ teacherId: userId, message: `shared a new Plexx: “${post.title}”`, href: `/forum#${post.id}` });
+  }
   return NextResponse.json({
     ...post,
     authorDisplayName: profile.displayName || profile.username,
