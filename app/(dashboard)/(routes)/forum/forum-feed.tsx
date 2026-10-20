@@ -3,13 +3,14 @@
 import { useState, type FormEvent } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 type ForumCommentItem = { id: string; body: string; authorId: string; authorUsername: string; authorDisplayName: string; authorAvatarUrl: string | null; createdAt: string };
-export type ForumPostItem = { id: string; title: string; body: string; authorId: string; authorUsername: string; authorDisplayName: string; authorAvatarUrl: string | null; createdAt: string; comments: ForumCommentItem[]; _count: { comments: number; likes: number }; likedByMe: boolean };
+export type ForumPostItem = { id: string; title: string; body: string; authorId: string; authorUsername: string; authorDisplayName: string; authorAvatarUrl: string | null; isTeacher: boolean; createdAt: string; comments: ForumCommentItem[]; _count: { comments: number; likes: number }; likedByMe: boolean };
 
 function timeAgo(value: string) {
   const minutes = Math.floor((Date.now() - new Date(value).getTime()) / 60000);
@@ -73,7 +74,7 @@ export function ForumFeed({ initialPosts, username, displayName, avatarUrl, user
     </form>
 
     {posts.map((post) => <article key={post.id} id={post.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <header className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><Avatar name={post.authorDisplayName} src={post.authorAvatarUrl} size="h-10 w-10" /><div><p className="font-bold text-slate-900">{post.authorDisplayName}</p><p className="text-xs text-slate-500">@{post.authorUsername} · <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time></p></div></div>{post.authorId === userId && <button type="button" aria-label="Delete post" onClick={() => deletePost(post.id)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>}</header>
+      <header className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3">{post.isTeacher ? <Link href={`/teachers/${post.authorId}`} aria-label={`View ${post.authorDisplayName}'s teacher profile`}><Avatar name={post.authorDisplayName} src={post.authorAvatarUrl} size="h-10 w-10" /></Link> : <Avatar name={post.authorDisplayName} src={post.authorAvatarUrl} size="h-10 w-10" />}<div>{post.isTeacher ? <Link href={`/teachers/${post.authorId}`} className="font-bold text-slate-900 hover:underline">{post.authorDisplayName}</Link> : <p className="font-bold text-slate-900">{post.authorDisplayName}</p>}<p className="text-xs text-slate-500">@{post.authorUsername} · <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time></p></div></div>{post.authorId === userId && <button type="button" aria-label="Delete post" onClick={() => deletePost(post.id)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>}</header>
       <h2 className="mt-4 text-lg font-bold text-slate-950">{post.title}</h2><p className="mt-2 whitespace-pre-line leading-7 text-slate-700">{post.body}</p>
       <div className="mt-5 flex gap-5 border-y border-slate-100 py-3 text-sm"><button type="button" onClick={() => toggleLike(post)} aria-pressed={post.likedByMe} className={`inline-flex items-center gap-2 font-semibold ${post.likedByMe ? "text-rose-600" : "text-slate-500 hover:text-rose-600"}`}><Heart className={`h-4 w-4 ${post.likedByMe ? "fill-current" : ""}`} />{post._count.likes} likes</button><span className="inline-flex items-center gap-2 text-slate-500"><MessageCircle className="h-4 w-4" />{post._count.comments} replies</span></div>
       <div className="space-y-3 pt-4">{post.comments.map((comment) => <div key={comment.id} className="flex gap-3 rounded-xl bg-slate-50 px-4 py-3"><Avatar name={comment.authorDisplayName} src={comment.authorAvatarUrl} size="h-8 w-8" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-x-3"><p className="text-sm font-bold text-slate-800">{comment.authorDisplayName} <span className="font-normal text-slate-500">@{comment.authorUsername}</span></p><time className="shrink-0 text-[11px] text-slate-400" dateTime={comment.createdAt}>{timeAgo(comment.createdAt)}</time></div><p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{comment.body}</p></div></div>)}{post._count.comments > post.comments.length && <p className="text-xs text-slate-500">Showing recent replies</p>}</div>

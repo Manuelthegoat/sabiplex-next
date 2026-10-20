@@ -52,7 +52,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     loadNotifications();
-    const timer = window.setInterval(loadNotifications, 60000);
+    const timer = window.setInterval(loadNotifications, 15000);
     window.addEventListener("focus", loadNotifications);
     return () => {
       window.clearInterval(timer);
@@ -87,7 +87,7 @@ export function NotificationBell() {
       <DropdownMenuTrigger asChild>
         <button type="button" aria-label={unreadCount ? `${unreadCount} unread notifications` : "Notifications"} className="relative grid h-9 w-9 place-items-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-neutral-900 px-1 text-[10px] font-bold leading-none text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+          {unreadCount > 0 && <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white shadow-sm" aria-live="polite">{unreadCount > 9 ? "9+" : unreadCount}</span>}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[min(24rem,calc(100vw-1rem))] p-0">

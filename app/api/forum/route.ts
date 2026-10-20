@@ -24,9 +24,15 @@ export async function GET() {
       likes: { where: { authorId: userId }, select: { id: true }, take: 1 },
     },
   });
-  const identities = await getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)]));
+  const authorIds = posts.map((post) => post.authorId);
+  const [identities, teacherCourses] = await Promise.all([
+    getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)])),
+    authorIds.length ? db.course.findMany({ where: { userId: { in: authorIds }, isPublished: true }, select: { userId: true } }) : Promise.resolve([]),
+  ]);
+  const teacherIds = new Set(teacherCourses.map((course) => course.userId));
   return NextResponse.json(posts.map(({ likes, ...post }) => ({
     ...post,
+    isTeacher: teacherIds.has(post.authorId),
     authorDisplayName: identities[post.authorId]?.displayName || post.authorUsername,
     authorAvatarUrl: identities[post.authorId]?.avatarUrl || null,
     comments: post.comments.map((comment) => ({
@@ -46,11 +52,13 @@ export async function POST(request: Request) {
   const parsed = postSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid post." }, { status: 400 });
   const post = await db.forumPost.create({ data: { ...parsed.data, authorId: userId, authorUsername: profile.username } });
+  const hasPublicTeacherProfile = !!(await db.course.findFirst({ where: { userId, isPublished: true }, select: { id: true } }));
   if (await hasTeacherAccess(userId)) {
     await notifyTeacherFollowers({ teacherId: userId, message: `shared a new Plexx: “${post.title}”`, href: `/forum#${post.id}` });
   }
   return NextResponse.json({
     ...post,
+    isTeacher: hasPublicTeacherProfile,
     authorDisplayName: profile.displayName || profile.username,
     authorAvatarUrl: profile.avatarUrl,
     comments: [],

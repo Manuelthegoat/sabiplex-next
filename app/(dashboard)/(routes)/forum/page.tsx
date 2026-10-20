@@ -23,9 +23,15 @@ export default async function ForumPage() {
       likes: { where: { authorId: userId }, select: { id: true }, take: 1 },
     },
   });
-  const identities = await getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)]));
+  const authorIds = posts.map((post) => post.authorId);
+  const [identities, teacherCourses] = await Promise.all([
+    getCommunityIdentities(posts.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.authorId)])),
+    authorIds.length ? db.course.findMany({ where: { userId: { in: authorIds }, isPublished: true }, select: { userId: true } }) : Promise.resolve([]),
+  ]);
+  const teacherIds = new Set(teacherCourses.map((course) => course.userId));
   const initialPosts: ForumPostItem[] = posts.map(({ likes, ...post }) => ({
     ...post,
+    isTeacher: teacherIds.has(post.authorId),
     authorDisplayName: identities[post.authorId]?.displayName || post.authorUsername,
     authorAvatarUrl: identities[post.authorId]?.avatarUrl || null,
     createdAt: post.createdAt.toISOString(),
