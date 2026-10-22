@@ -43,7 +43,7 @@ const SearchPage = async ({
       <div className="mx-auto max-w-7xl space-y-6">
       <div><p className="eyebrow">Explore</p><h1 className="mt-1 text-3xl font-black tracking-tight">Find your next skill</h1><p className="mt-2 text-slate-500">Browse courses that meet you where your curiosity starts.</p></div>
       <Categories items={categories} />
-      {await TeacherSearchResults({ query: searchParams.title ?? undefined, userId })}
+      {await TeacherSearchResults({ query: searchParams.title ?? undefined, userId: userId ?? undefined })}
       <CoursesList items={courses} />
       </div>
     </div>
