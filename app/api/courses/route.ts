@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     title: searchParams.get("title") ?? undefined,
     categoryId: searchParams.get("categoryId") ?? undefined,
   });
-  const profiles = await db.userProfile.findMany({ where: { userId: { in: [...new Set(courses.map((course) => course.userId))] } }, select: { userId: true, username: true, displayName: true } });
+  const profiles = await db.userProfile.findMany({ where: { userId: { in: Array.from(new Set(courses.map((course) => course.userId))) } }, select: { userId: true, username: true, displayName: true } });
   const names = new Map(profiles.map((profile) => [profile.userId, profile.displayName || profile.username]));
   return NextResponse.json(courses.map((course) => ({
     id: course.id,

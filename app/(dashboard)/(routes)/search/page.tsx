@@ -57,7 +57,7 @@ async function TeacherSearchResults({ query, userId }: { query?: string; userId?
     select: { userId: true },
     distinct: ["userId"],
   });
-  const teacherIds = [...new Set(teacherCourseOwners.map(({ userId: teacherId }) => teacherId))];
+  const teacherIds = Array.from(new Set(teacherCourseOwners.map(({ userId: teacherId }) => teacherId)));
   if (!teacherIds.length) return null;
 
   const [profiles, teacherDetails, follows] = await Promise.all([
