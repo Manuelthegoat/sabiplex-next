@@ -4,6 +4,14 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { hasTeacherAccess } from "@/lib/teacher";
 
+export async function GET() {
+  const { userId } = auth();
+  if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+  if (!(await hasTeacherAccess(userId))) return new NextResponse("Forbidden", { status: 403 });
+  const profile = await db.teacherProfile.findUnique({ where: { userId } });
+  return NextResponse.json(profile);
+}
+
 const profileSchema = z.object({
   headline: z.string().trim().max(120).optional().default(""),
   bio: z.string().trim().max(2000).optional().default(""),

@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
+export async function GET() {
+  const { userId } = auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const profile = await db.userProfile.findUnique({ where: { userId }, select: { username: true, displayName: true, avatarUrl: true } });
+  return NextResponse.json(profile);
+}
+
 const profileSchema = z.object({
   displayName: z.string().trim().min(1).max(60),
   avatarUrl: z.string().trim().max(1000).optional().default(""),
