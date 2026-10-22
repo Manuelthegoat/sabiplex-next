@@ -28,7 +28,7 @@ export const Categories = ({ items }: CategoriesProps) => {
             url: pathname,
             query: {
                 title: searchParams.get("title"),
-                categoryIds: [...next],
+                categoryIds: Array.from(next),
                 categoryId: null,
             },
         }, { skipNull: true, skipEmptyString: true });
